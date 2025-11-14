@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhisperBox Ultra 3D | Tech Brian</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="https://files.catbox.moe/d5zlzh.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Exo+2:wght@400;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg: #0a0a1f;
+        --primary: #00ffff;
+        --secondary: #ff00ff;
+        --accent: #00ff88;
+        --text: #e0f7ff;
+        --card: #1a1a3e;
+        --light-bg: #f5f9;
+        --light-primary: #0099ff;
+        --light-secondary: #ff3399;
+        --light-text: #1a1a1a;
+        --light-card: #ffffff;
+        --cat-idea: #00cc66;
+        --cat-concern: #ff6666;
+        --cat-praise: #ffcc00;
+        --cat-other: #9999ff;
+        --glow1: rgba(0,255,255,0.3);
+        --glow2: rgba(255,0,255,0.3);
+        --glow3: rgba(0,255,136,0.25);
+    }
+    [data-theme="light"] {
+        --bg: var(--light-bg);
+        --primary: var(--light-primary);
+        --secondary: var(--light-secondary);
+        --text: var(--light-text);
+        --card: var(--light-card);
+        --glow1: rgba(0,153,255,0.2);
+        --glow2: rgba(255,51,153,0.2);
+        --glow3: rgba(0,153,255,0.15);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; overflow:hidden; }
+    body {
+        font-family: 'Exo 2', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        perspective: 1500px;
+        position: relative;
+        transition: background 0.8s ease;
+    }
+
+    /* === ADVANCED 3D BACKGROUND === */
+    .scene {
+        position: fixed; inset: 0; z-index: -5;
+        transform-style: preserve-3d;
+        animation: sceneRotate 120s linear infinite;
+    }
+    @keyframes sceneRotate { to { transform: rotateY(360deg); } }
+
+    .layer {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 30%, var(--glow1) 70%);
+        transform-style: preserve-3d;
+    }
+    .layer:nth-child(1) { transform: translateZ(-600px); animation: pulse1 8s ease-in-out infinite; }
+    .layer:nth-child(2) { transform: translateZ(-400px); animation: pulse2 10s ease-in-out infinite; }
+    .layer:nth-child(3) { transform: translateZ(-200px); animation: pulse3 12s ease-in-out infinite; }
+    @keyframes pulse1 { 0%,100% { opacity:0.3; } 50% { opacity:0.6; } }
+    @keyframes pulse2 { 0%,100% { opacity:0.2; } 50% { opacity:0.5; } }
+    @keyframes pulse3 { 0%,100% { opacity:0.1; } 50% { opacity:0.4; } }
+
+    .grid-3d {
+        position: fixed; inset: 0; z-index: -4;
+        background: 
+            linear-gradient(90deg, rgba(0,255,255,0.08) 1px, transparent 1px),
+            linear-gradient(rgba(255,0,255,0.08) 1px, transparent 1px);
+        background-size: 80px 80px;
+        transform: rotateX(70deg) translateZ(-300px) scale(2);
+        animation: gridDrift 30s linear infinite;
+        opacity: 0.7;
+    }
+    @keyframes gridDrift { 0% { transform: rotateX(70deg) translateZ(-300px) translateY(0) scale(2); } 100% { transform: rotateX(70deg) translateZ(-300px) translateY(200px) scale(2); } }
+
+    .particles {
+        position: fixed; inset: 0; z-index: -3;
+        pointer-events: none;
+        transform-style: preserve-3d;
+    }
+    .particle {
+        position: absolute; width: 6px; height: 6px;
+        background: var(--primary); border-radius: 50%;
+        box-shadow: 0 0 15px var(--primary), 0 0 30px var(--secondary);
+        animation: float3D 20s linear infinite;
+    }
+    @keyframes float3D {
+        0% { transform: translate3d(calc(100vw * (var(--x) - 0.5)), 100vh, -500px); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translate3d(calc(100vw * (var(--x) - 0.5)), -100px, 500px); opacity: 0; }
+    }
+
+    /* === GLASSMORPHISM CARDS === */
+    .glass {
+        background: rgba(26,26,62,0.4);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(0,255,255,0.3);
+        box-shadow: 
+            0 8px 32px rgba(0,0,0,0.3),
+            inset 0 0 20px rgba(255,255,255,0.1),
+            0 0 40px var(--glow1);
+        border-radius: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+    .glass::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(0,255,255,0.1), transparent 50%, rgba(255,0,255,0.1));
+        z-index: -1; opacity: 0.6;
+    }
+
+    /* === SPLASH SCREEN === */
+    #splash {
+        position: fixed; inset: 0; background: var(--bg);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        z-index: 9999; transition: opacity 1.5s ease;
+        transform-style: preserve-3d;
+    }
+    .icon-3d {
+        width: 160px; height: 160px;
+        background: conic-gradient(from 0deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+        border-radius: 50% 30% 50% 25%;
+        position: relative; animation: float3DIcon 4s ease-in-out infinite, spin3d 10s linear infinite;
+        box-shadow: 
+            0 0 60px var(--primary),
+            0 0 120px var(--secondary),
+            inset 0 0 40px rgba(255,255,255,0.5);
+        transform-style: preserve-3d;
+        background-image: url('https://files.catbox.moe/d5zlzh.jpg');
+        background-size: cover;
+        background-position: center;
+    }
+    @keyframes float3DIcon {
+        0%,100% { transform: translateY(0) rotateX(0) translateZ(0); }
+        50% { transform: translateY(-30px) rotateX(15deg) translateZ(50px); }
+    }
+    @keyframes spin3d { 0% { transform: perspective(500px) rotateY(0deg); } 100% { transform: perspective(500px) rotateY(360deg); } }
+    .icon-3d::before {
+        content: ''; position: absolute; inset: 0;
+        background: rgba(0,0,0,0.3);
+    }
+    .loading-text {
+        margin-top: 40px; font-family: 'Orbitron', sans-serif;
+        font-size: 1.6rem; letter-spacing: 4px; color: var(--primary);
+        text-shadow: 0 0 15px var(--primary), 0 0 30px var(--secondary);
+        animation: neonFlicker 2.5s ease-in-out infinite;
+    }
+    @keyframes neonFlicker {
+        0%,100% { opacity:1; text-shadow: 0 0 15px var(--primary), 0 0 30px var(--secondary); }
+        50% { opacity:0.8; text-shadow: 0 0 8px var(--primary), 0 0 15px var(--secondary); }
+    }
+
+    /* === MAIN APP === */
+    .container {
+        max-width: 1100px; margin: 0 auto; padding: 40px 20px;
+        opacity: 0; transform: translateY(50px) rotateX(-10deg);
+        transition: all 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transform-style: preserve-3d;
+    }
+    .container.show { opacity:1; transform: translateY(0) rotateX(0); }
+
+    header {
+        text-align: center; margin-bottom: 50px; position: relative;
+        transform-style: preserve-3d;
+    }
+    .title-bar {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 3.2rem; font-weight: 700;
+        background: conic-gradient(from 0deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 40px rgba(0,255,255,0.7);
+        margin-bottom: 12px;
+        animation: titleGlow 6s ease-in-out infinite;
+    }
+    @keyframes titleGlow { 0%,100% { text-shadow: 0 0 40px rgba(0,255,255,0.7); } 50% { text-shadow: 0 0 60px rgba(0,255,255,0.9), 0 0 80px rgba(255,0,255,0.5); } }
+    .subtitle {
+        font-size: 1.2rem; opacity: 0.95; letter-spacing: 1.5px;
+        text-shadow: 0 0 10px var(--glow1);
+    }
+    .badge {
+        position: absolute; top: -20px; right: 20px;
+        background: var(--secondary); color: white;
+        width: 45px; height: 45px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 1.1rem;
+        box-shadow: 0 0 25px var(--secondary), 0 0 50px rgba(255,0,255,0.6);
+        animation: badgePulse 2.2s infinite, floatBadge 3s ease-in-out infinite;
+        z-index: 10;
+    }
+    @keyframes badgePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    @keyframes floatBadge { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .theme-toggle {
+        position: absolute; top: 0; right: 100px;
+        background: var(--card); border: 3px solid var(--primary);
+        width: 70px; height: 70px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.5s; box-shadow: 0 0 30px var(--primary);
+        font-size: 1.8rem; z-index: 11;
+    }
+    .theme-toggle:hover { transform: scale(1.2) rotate(15deg); box-shadow: 0 0 50px var(--primary); }
+
+    /* === CATEGORY BUTTONS === */
+    .category-selector {
+        display: flex; justify-content: center; gap: 18px; margin-bottom: 40px; flex-wrap: wrap;
+        transform-style: preserve-3d;
+    }
+    .cat-btn {
+        background: rgba(255,255,255,0.1); color: var(--text); border: 2px solid transparent;
+        padding: 14px 28px; border-radius: 50px; cursor: pointer; font-weight: 600;
+        transition: all 0.5s; display: flex; align-items: center; gap: 10px;
+        font-size: 1.1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        transform: translateZ(0);
+    }
+    .cat-btn.active {
+        background: conic-gradient(from 0deg, var(--primary), var(--secondary), var(--accent));
+        color: white; transform: translateY(-6px) translateZ(30px);
+        box-shadow: 0 15px 40px rgba(0,255,255,0.5), 0 0 40px var(--glow1);
+        border: none;
+    }
+    .cat-btn:hover:not(.active) { transform: translateY(-4px) translateZ(15px); background: rgba(255,255,255,0.2); }
+
+    /* === CHAT FORM === */
+    .chat-box {
+        padding: 40px; margin-bottom: 50px; text-align: center;
+        transform-style: preserve-3d;
+    }
+    textarea {
+        width: 100%; height: 160px; padding: 25px; background: rgba(0,0,0,0.5);
+        border: 2px solid var(--primary); border-radius: 20px; color: var(--text);
+        font-size: 1.2rem; resize: none; transition: all 0.5s; margin-bottom: 25px;
+        font-family: 'Exo 2', sans-serif; box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+    }
+    textarea:focus {
+        outline: none; box-shadow: 0 0 35px var(--primary), inset 0 0 25px rgba(0,0,0,0.4);
+        transform: scale(1.03) translateZ(20px); border-color: var(--accent);
+    }
+    .submit-btn {
+        background: conic-gradient(from 0deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+        color: white; border: none; padding: 18px 50px; border-radius: 50px;
+        font-weight: bold; cursor: pointer; font-size: 1.2rem;
+        transition: all 0.5s; box-shadow: 0 10px 35px rgba(0,255,255,0.6);
+        position: relative; overflow: hidden; font-family: 'Orbitron', sans-serif;
+        transform: translateZ(0);
+    }
+    .submit-btn::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.5), transparent);
+        transform: translateX(-100%); transition: transform 0.8s;
+    }
+    .submit-btn:hover::before { transform: translateX(100%); }
+    .submit-btn:hover { transform: translateY(-6px) translateZ(40px); box-shadow: 0 15px 50px rgba(0,255,255,0.8); }
+
+    /* === ADMIN BUTTON === */
+    .admin-btn {
+        display: block; margin: 0 auto 50px; background: transparent;
+        border: 3px dashed var(--secondary); color: var(--secondary);
+        padding: 16px 40px; border-radius: 50px; cursor: pointer;
+        font-weight: bold; font-size: 1.1rem; transition: all 0.6s;
+        position: relative; overflow: hidden; transform: translateZ(0);
+    }
+    .admin-btn:hover {
+        background: var(--secondary); color: #000;
+        transform: translateY(-5px) translateZ(30px); box-shadow: 0 15px 40px rgba(255,0,255,0.6);
+    }
+    .admin-btn::after {
+        content: 'lock'; position: absolute; right: 18px; top: 50%;
+        transform: translateY(-50%); font-family: 'Font Awesome 6 Free';
+        font-weight: 900; opacity: 0.8; font-size: 1.2rem;
+    }
+
+    /* === SYNC SECTION === */
+    .sync-section { text-align: center; margin: 50px 0; }
+    .sync-btn {
+        background: transparent; border: 3px dashed var(--primary); color: var(--primary);
+        padding: 18px 50px; border-radius: 50px; cursor: pointer; font-weight: bold;
+        transition: all 0.6s; font-size: 1.2rem; transform: translateZ(0);
+    }
+    .sync-btn.syncing {
+        background: cyan; color: #000; border-color: cyan;
+        animation: syncPulse 2s infinite;
+    }
+    @keyframes syncPulse { 0% { box-shadow: 0 0 0 0 rgba(0,255,255,0.9); } 70% { box-shadow: 0 0 0 30px rgba(0,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,255,0); } }
+    .spinner {
+        width: 80px; height: 80px; border: 8px dotted #000; border-radius: 50%;
+        display: inline-block; margin: 30px auto; animation: spin3D 1.8s linear infinite;
+        display: none; transform-style: preserve-3d;
+    }
+    .sync-btn.syncing ~ .spinner { display: block; }
+    @keyframes spin3D { to { transform: rotateY(360deg); } }
+    .sync-message { font-weight: bold; color: #000; margin-top: 15px; display: none; }
+    .sync-btn.syncing ~ .sync-message { display: block; }
+
+    /* === ADMIN PANEL === */
+    .admin-section {
+        padding: 40px; margin-bottom: 50px; display: none;
+        transform-style: preserve-3d;
+    }
+    .admin-section.show { display: block; animation: panelEnter 1s ease; }
+    @keyframes panelEnter { from { opacity:0; transform: translateY(-40px) rotateX(-20deg); } to { opacity:1; transform: none; } }
+    .admin-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 30px; flex-wrap: wrap; gap: 20px;
+    }
+    .admin-title {
+        font-family: 'Orbitron', sans-serif; color: var(--secondary); font-size: 2rem;
+        text-shadow: 0 0 20px var(--glow2);
+    }
+    .password-box {
+        display: flex; gap: 15px; max-width: 420px;
+    }
+    .password-box input {
+        flex: 1; padding: 16px; background: rgba(0,0,0,0.5);
+        border: 2px solid var(--secondary); border-radius: 15px; color: var(--text);
+        font-size: 1.1rem; box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+    }
+    .eye-toggle {
+        background: var(--secondary); color: white; border: none;
+        width: 50px; height: 50px; border-radius: 50%; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+        box-shadow: 0 0 20px var(--glow2);
+    }
+    .admin-controls {
+        display: flex; gap: 18px; margin-bottom: 25px; flex-wrap: wrap;
+    }
+    .filter-select {
+        background: rgba(0,0,0,0.5); color: var(--text); border: 2px solid var(--secondary);
+        padding: 12px 18px; border-radius: 50px; font-size: 1.1rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    .suggestions-list {
+        max-height: 600px; overflow-y: auto; padding-right: 15px;
+    }
+    .suggestion-item {
+        background: rgba(0,0,0,0.3); padding: 22px; border-radius: 20px;
+        margin-bottom: 22px; border-left: 6px solid var(--primary);
+        animation: itemEnter 0.7s ease; position: relative;
+        transform-style: preserve-3d;
+    }
+    @keyframes itemEnter { from { opacity:0; transform: translateX(-40px) rotateY(-15deg); } to { opacity:1; transform: none; } }
+    .suggestion-item.seen { opacity: 0.7; border-left-color: #666; }
+    .cat-tag {
+        position: absolute; top: 15px; right: 15px; font-size: 0.8rem;
+        padding: 5px 12px; border-radius: 50px; color: white; font-weight: bold;
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .suggestion-actions {
+        position: absolute; top: 15px; right: 80px; display: flex; gap: 10px;
+        opacity: 0; transition: opacity 0.4s;
+    }
+    .suggestion-item:hover .suggestion-actions { opacity:1; }
+    .action-btn {
+        background: rgba(255,255,255,0.3); border: none; width: 40px; height: 40px;
+        border-radius: 50%; cursor: pointer; font-size: 1rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .action-btn.delete { background: #ff3366; }
+    .action-btn.seen { background: #00cc66; }
+
+    /* === FOOTER === */
+    footer {
+        text-align: center; padding: 50px; font-size: 1.1rem; opacity: 0.9;
+    }
+    .contact-links {
+        display: flex; justify-content: center; gap: 30px; margin: 25px 0; flex-wrap: wrap;
+    }
+    .contact-link {
+        display: flex; align-items: center; gap: 12px; color: var(--primary);
+        text-decoration: none; padding: 14px 25px; border-radius: 50px;
+        background: rgba(0,255,255,0.15); transition: all 0.5s;
+        min-width: 200px; justify-content: center; font-weight: 600;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    .contact-link:hover {
+        background: var(--primary); color: #000; transform: translateY(-5px) translateZ(25px);
+        box-shadow: 0 12px 35px rgba(0,255,255,0.6);
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+        .title-bar { font-size: 2.5rem; }
+        .container { padding: 25px 15px; }
+        .chat-box, .admin-section { padding: 30px; }
+        .category-selector { gap: 12px; }
+        .cat-btn { padding: 12px 20px; font-size: 1rem; }
+        .admin-header { flex-direction: column; align-items: stretch; }
+        .password-box { max-width: 100%; }
+        .contact-links { flex-direction: column; align-items: center; }
+        .contact-link { width: 85%; }
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<!-- 3D Scene -->
+<div class="scene">
+</div>
+<div class="grid-3d"></div>
+<div class="particles" id="particles"></div>
+
+<!-- Splash -->
+<div id="splash">
+    <div class="icon-3d"></div>
+    <div class="loading-text">Entering Quantum Realm...</div>
+</div>
+
+<!-- Main App -->
+<div class="container" id="app">
+    <header>
+        <h1 class="title-bar">WhisperBox 3D</h1>
+        <p class="subtitle">Anonymous • Secure • Cross-Device Sync</p>
+        <p class="subtitle"><marquee><h3>Below are some suggestions of issues. Please click on the category you want to talk/suggest about before sending...📰</h3></marquee></p>
+        <div class="badge" id="msgCount">0</div>
+        <div class="theme-toggle" id="themeToggle">Moon</div>
+    </header>
+
+    <div class="category-selector" id="categorySelector">
+        <button class="cat-btn active" data-cat="idea">Idea</button>
+        <button class="cat-btn" data-cat="concern">Concern</button>
+        <button class="cat-btn" data-cat="praise">Praise</button>
+        <button class="cat-btn" data-cat="other">Other</button>
+    </div>
+
+    <div class="chat-box glass">
+        <textarea id="messageInput" placeholder="Your voice matters. Speak freely..."></textarea>
+        <button class="submit-btn" id="submitBtn">Transmit Securely</button>
+    </div>
+
+    <button class="admin-btn glass" id="adminBtn">Access Admin Portal</button>
+
+    <div class="sync-section">
+        <button class="sync-btn glass" id="syncBtn">Quantum Sync</button>
+        <div class="spinner"></div>
+        <div class="sync-message">Syncing across dimensions...</div>
+    </div>
+
+    <div class="admin-section glass" id="adminSection">
+        <div class="admin-header">
+            <h3 class="admin-title">Quantum Control Panel</h3>
+            <div class="password-box">
+                <input type="password" id="adminPass" placeholder="Enter master key">
+                <button class="eye-toggle" id="eyeToggle">Eye</button>
+            </div>
+        </div>
+
+        <div class="admin-controls">
+            <select class="filter-select" id="filterSelect">
+                <option value="all">All Transmissions</option>
+                <option value="idea">Ideas</option>
+                <option value="concern">Concerns</option>
+                <option value="praise">Praise</option>
+                <option value="other">Other</option>
+                <option value="unseen">Unseen Only</option>
+            </select>
+        </div>
+
+        <div class="suggestions-list" id="adminList"></div>
+    </div>
+
+    <footer>
+        <p>Engineered by Tech Brian | Class of 2025</p>
+        <div class="contact-links">
+            <a href="https://wa.me/254748950572" class="contact-link" target="_blank">WhatsApp: 254748950572</a>
+            <a href="mailto:bridah888@gmail.com" class="contact-link">Email: bridah888@gmail.com</a>
+            <a href="tel:0748950572" class="contact-link">Call: 0748950572</a>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // === CROSS-DEVICE SYNC ENGINE ===
+    const SYNC_KEY = 'whisperbox_sync_v3';
+    let lastSync = 0;
+    let isSyncing = false;
+
+    const broadcastChange = () => {
+        const now = Date.now();
+        localStorage.setItem(SYNC_KEY, now);
+        lastSync = now;
+    };
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === SYNC_KEY && e.newValue && !isSyncing) {
+            const remoteTime = parseInt(e.newValue);
+            if (remoteTime > lastSync) {
+                console.log('Sync detected from another device!');
+                loadData(true);
+                showSyncNotification();
+            }
+        }
+    });
+
+    const showSyncNotification = () => {
+        const notif = document.createElement('div');
+        notif.textContent = 'Synced from another device!';
+        notif.style.cssText = `
+            position: fixed; top: 20px; right: 20px; background: var(--accent); color: #000;
+            padding: 12px 24px; border-radius: 50px; font-weight: bold; z-index: 10000;
+            box-shadow: 0 0 30px var(--accent); animation: notifPop 0.5s ease;
+        `;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 3000);
+    };
+    const style = document.createElement('style');
+    style.textContent = `@keyframes notifPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }`;
+    document.head.appendChild(style);
+
+    // === 3D PARTICLE SYSTEM ===
+    const createParticle = () => {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const x = Math.random();
+        p.style.setProperty('--x', x);
+        p.style.left = (x * 100) + 'vw';
+        p.style.animationDelay = Math.random() * 20 + 's';
+        p.style.animationDuration = (Math.random() * 15 + 15) + 's';
+        document.getElementById('particles').appendChild(p);
+        setTimeout(() => p.remove(), 35000);
+    };
+    setInterval(createParticle, 600);
+
+    // === DOM & INIT ===
+    const els = {
+        splash: document.getElementById('splash'),
+        app: document.getElementById('app'),
+        themeToggle: document.getElementById('themeToggle'),
+        messageInput: document.getElementById('messageInput'),
+        submitBtn: document.getElementById('submitBtn'),
+        msgCount: document.getElementById('msgCount'),
+        adminBtn: document.getElementById('adminBtn'),
+        adminSection: document.getElementById('adminSection'),
+        adminPass: document.getElementById('adminPass'),
+        eyeToggle: document.getElementById('eyeToggle'),
+        adminList: document.getElementById('adminList'),
+        syncBtn: document.getElementById('syncBtn'),
+        spinner: document.querySelector('.spinner'),
+        syncMessage: document.querySelector('.sync-message'),
+        categoryBtns: document.querySelectorAll('.cat-btn'),
+        filterSelect: document.getElementById('filterSelect')
+    };
+
+    const ADMIN_PASSWORD = '#TechBrian@01';
+    const STORAGE_KEY = 'whisperbox_suggestions_v3';
+    let suggestions = [];
+    let currentCategory = 'idea';
+    let currentFilter = 'all';
+
+    const init = () => {
+        loadData();
+        setTimeout(showApp, 3200);
+        setupEventListeners();
+        loadTheme();
+        startAutoSync();
+    };
+
+    const loadData = (fromSync = false) => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            suggestions = JSON.parse(saved);
+            if (!fromSync) lastSync = Date.now();
+        }
+        updateBadge();
+        if (els.adminSection.classList.contains('show') && authenticated) {
+            renderAdminList();
+        }
+    };
+
+    const saveData = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(suggestions));
+        broadcastChange();
+    };
+
+    const showApp = () => {
+        els.splash.style.opacity = '0';
+        setTimeout(() => {
+            els.splash.style.display = 'none';
+            els.app.classList.add('show');
+        }, 1500);
+    };
+
+    // === THEME ===
+    const loadTheme = () => {
+        const saved = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+        els.themeToggle.textContent = saved === 'light' ? 'dark' : 'dark';
+    };
+
+    const toggleTheme = () => {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const newTheme = isLight ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        els.themeToggle.textContent = newTheme === 'light' ? 'Moon' : 'Sun';
+        localStorage.setItem('theme', newTheme);
+    };
+
+    // === CATEGORY & SUBMIT ===
+    const setCategory = (cat) => {
+        currentCategory = cat;
+        els.categoryBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.cat === cat);
+        });
+    };
+
+    const submitMessage = () => {
+        const text = els.messageInput.value.trim();
+        if (!text) return alert('Message required!');
+
+        const suggestion = {
+            id: Date.now() + Math.random(),
+            text,
+            category: currentCategory,
+            timestamp: new Date().toLocaleString(),
+            seen: false,
+            device: navigator.userAgent.substring(0, 30)
+        };
+
+        suggestions.unshift(suggestion);
+        saveData();
+        els.messageInput.value = '';
+        updateBadge();
+        alert('Transmitted securely!');
+
+        if (authenticated) {
+            renderAdminList();
+            els.adminList.scrollTop = 0;
+        }
+    };
+
+    // === BADGE ===
+    const updateBadge = () => {
+        const unseen = suggestions.filter(s => !s.seen).length;
+        els.msgCount.textContent = unseen;
+        els.msgCount.style.background = unseen > 0 ? 'var(--secondary)' : '#444';
+    };
+
+    // === ADMIN ===
+    let authenticated = false;
+    els.adminBtn.addEventListener('click', () => {
+        els.adminSection.classList.add('show');
+        els.adminPass.value = '';
+        authenticated = false;
+        els.adminList.innerHTML = '<p style="text-align:center; opacity:0.6; padding:25px;">Enter password to unlock.</p>';
+    });
+
+    const checkAdminAccess = () => {
+        if (els.adminPass.value === ADMIN_PASSWORD) {
+            authenticated = true;
+            renderAdminList();
+            els.adminPass.value = '';
+        } else if (els.adminPass.value) {
+            alert('Access denied!');
+        }
+    };
+
+    const renderAdminList = () => {
+        if (!authenticated) return;
+
+        const filtered = suggestions.filter(s => {
+            if (currentFilter === 'all') return true;
+            if (currentFilter === 'unseen') return !s.seen;
+            return s.category === currentFilter;
+        });
+
+        const colors = { idea: 'var(--cat-idea)', concern: 'var(--cat-concern)', praise: 'var(--cat-praise)', other: 'var(--cat-other)' };
+
+        els.adminList.innerHTML = filtered.map(s => `
+            <div class="suggestion-item ${s.seen ? 'seen' : ''}">
+                <div style="margin-bottom:12px; font-size:0.95rem; opacity:0.75;">
+                    ${s.timestamp} • <em>${s.device}</em>
+                </div>
+                <p style="margin-bottom:15px; line-height:1.6;">${s.text.replace(/\n/g, '<br>')}</p>
+                <span class="cat-tag" style="background:${colors[s.category]}">${s.category.toUpperCase()}</span>
+                <div class="suggestion-actions">
+                    <button class="action-btn seen" onclick="toggleSeen(${s.id})">Check</button>
+                    <button class="action-btn delete" onclick="deleteSuggestion(${s.id})">Trash</button>
+                </div>
+            </div>
+        `).join('') || '<p style="text-align:center; opacity:0.6; padding:25px;">No transmissions.</p>';
+
+        updateBadge();
+    };
+
+    window.toggleSeen = (id) => {
+        suggestions = suggestions.map(s => s.id === id ? { ...s, seen: !s.seen } : s);
+        saveData();
+        renderAdminList();
+    };
+
+    window.deleteSuggestion = (id) => {
+        if (confirm('Permanently erase?')) {
+            suggestions = suggestions.filter(s => s.id !== id);
+            saveData();
+            renderAdminList();
+        }
+    };
+
+    // === SYNC ===
+    const startAutoSync = () => {
+        setInterval(() => {
+            if (!isSyncing && Date.now() - lastSync > 5000) {
+                loadData();
+            }
+        }, 10000);
+    };
+
+    els.syncBtn.addEventListener('click', () => {
+        isSyncing = true;
+        els.syncBtn.classList.add('syncing');
+        setTimeout(() => {
+            loadData();
+            if (authenticated) renderAdminList();
+            els.syncBtn.classList.remove('syncing');
+            isSyncing = false;
+        }, 2500);
+    });
+
+    // === EVENTS ===
+    const setupEventListeners = () => {
+        els.themeToggle.addEventListener('click', toggleTheme);
+        els.submitBtn.addEventListener('click', submitMessage);
+        els.eyeToggle.addEventListener('click', () => {
+            const type = els.adminPass.type === 'password' ? 'text' : 'password';
+            els.adminPass.type = type;
+            els.eyeToggle.textContent = type === 'text' ? 'Hidden Eye' : 'Eye';
+        });
+        els.adminPass.addEventListener('keypress', e => e.key === 'Enter' && checkAdminAccess());
+        document.querySelector('.password-box').addEventListener('click', checkAdminAccess);
+
+        els.categoryBtns.forEach(btn => btn.addEventListener('click', () => setCategory(btn.dataset.cat)));
+        els.filterSelect.addEventListener('change', e => { currentFilter = e.target.value; renderAdminList(); });
+
+        els.messageInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitMessage(); }
+        });
+
+        els.messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    };
+
+    // === PWA INSTALL PROMPT ===
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallPromotion();
+    });
+
+    const showInstallPromotion = () => {
+        const promo = document.createElement('div');
+        promo.innerHTML = `
+            <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card); color: var(--text); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; gap: 15px; max-width: 300px;">
+                <i style="font-size: 2rem; color: var(--primary);">📱</i>
+                <div>
+                    <strong>Install WhisperBox?</strong><br>
+                    <small>Add to home screen for offline use!</small>
+                </div>
+                <button id="installBtn" style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold;">Install</button>
+                <button id="dismissBtn" style="background: transparent; color: var(--text); border: 1px solid var(--text); padding: 8px 16px; border-radius: 20px; cursor: pointer;">Later</button>
+            </div>
+        `;
+        document.body.appendChild(promo);
+
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') deferredPrompt = null;
+            }
+            promo.remove();
+        });
+
+        document.getElementById('dismissBtn').addEventListener('click', () => promo.remove());
+    };
+
+    // === START ===
+    init();
+    
+    if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+  }
+</script>
+</body>
+</html>
